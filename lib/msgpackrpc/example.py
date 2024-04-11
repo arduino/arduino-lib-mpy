@@ -8,18 +8,36 @@ import msgpackrpc
 import gc
 
 
-class Adder:
-    def __init__(self):
-        pass
-
-    def add(self, a, b):
-        logging.info(f"add({a}, {b}) is called")
-        return a + b
+def add(a, b):
+    logging.info(f"add({a}, {b}) is called")
+    return a + b
 
 
 def sub(a, b):
     logging.info(f"sub({a}, {b}) is called")
     return a - b
+
+
+class Foo:
+    def __init__(self, name):
+        self.name = name
+
+    def add(self, a, b):
+        logging.info(f"{self.name}.add({a}, {b}) is called")
+        return a + b
+
+    def sub(self, a, b):
+        logging.info(f"{self.name}.sub({a}, {b}) is called")
+        return a - b
+
+
+class Adder:
+    def __init__(self):
+        pass
+
+    def __call__(self, a, b):
+        logging.info(f"Adder({a}, {b}) is called")
+        return a + b
 
 
 if __name__ == "__main__":
@@ -34,9 +52,19 @@ if __name__ == "__main__":
     # Create an RPC object
     rpc = msgpackrpc.MsgPackRPC()
 
-    # Register objects or functions to be called by the remote processor.
-    rpc.bind(Adder())
-    rpc.bind(sub)
+    # Register remote functions.
+    rpc.bind("sub", sub)
+    rpc.bind("add", add)
+
+    # Register a callable object.
+    rpc.bind("adder", Adder())
+
+    # Register full objects. The following binds all public methods of an object to their
+    # respective qualified names. For instance, `foo1`'s methods will be bound to `foo1.add`
+    # and `foo1.sub`. Alternatively, bound methods can be registered individually, by calling
+    # bind on each method. For example, `rpc.bind("foo.add", foo.add)`.
+    rpc.bind("foo1", Foo("foo1"))
+    rpc.bind("foo2", Foo("foo2"))
 
     # Start the remote processor and wait for it to be ready to communicate.
     rpc.start(firmware=0x08180000, timeout=1000, num_channels=2)

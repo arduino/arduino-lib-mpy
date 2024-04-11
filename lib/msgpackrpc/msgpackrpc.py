@@ -98,7 +98,7 @@ class MsgPackRPC:
         self.msgid = 0
         self.msgbuf = {}
         self.msgio = MsgPackIO() if streaming else None
-        self.servers = []
+        self.callables = {}
 
     def _bind_callback(self, src, name):
         if log_level_enabled(logging.INFO):
@@ -135,30 +135,31 @@ class MsgPackRPC:
             return Future(msgid, self.msgbuf, fname, fargs)
 
     def _dispatch(self, msgid, fname, fargs):
-        func = None
         retobj = None
         error = None
-        for obj in self.servers:
-            if callable(obj) and obj.__name__ == fname:
-                func = obj
-            elif hasattr(obj, fname):
-                func = getattr(obj, fname)
-            if func is not None:
-                break
 
-        if func is not None:
-            retobj = func(*fargs)
+        if fname in self.callables:
+            retobj = self.callables[fname](*fargs)
         else:
             error = "Unbound function called %s" % (fname)
 
         self._send_msg(msgid, _MSG_TYPE_RESPONSE, error, retobj)
 
-    def bind(self, obj):
+    def bind(self, name, obj):
         """
-        Register an object or a function to be called by the remote processor.
-        obj: An object whose methods can be called by remote processors, or a function.
+        Bind a callable or an object to a name.
+        name: The name to which the callable or object is bound.
+        obj: A callable or an object to bind to the name. If an object is passed, all of its
+        public methods will be bound to their respective qualified names.
         """
-        self.servers.append(obj)
+        if callable(obj):
+            # Bind a single callable to its name.
+            self.callables[name] = obj
+        else:
+            # Bind all public methods of an object to their respective qualified names.
+            for k, v in obj.__class__.__dict__.items():
+                if callable(v) and not k.startswith("_"):
+                    self.callables[name + "." + k] = getattr(obj, k)
 
     def start(self, firmware=None, num_channels=2, timeout=3000):
         """
