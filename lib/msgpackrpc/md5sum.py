@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # Create an RPC object
     rpc = msgpackrpc.MsgPackRPC()
     # Register objects or functions to be called by the remote processor.
-    rpc.bind(md5hash)
+    rpc.bind("md5hash", md5hash)
     # Start the remote processor and wait for it to be ready to communicate.
     rpc.start(firmware=0x08180000, timeout=3000, num_channels=2)
 
