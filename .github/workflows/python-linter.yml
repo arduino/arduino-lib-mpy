@@ -34,5 +34,5 @@ jobs:
 
     - name: '😾 Lint with flake8'
       run: |
-        flake8 --count --ignore=C901 --select=E9,F63,F7,F82 --exclude=manifest.py --show-source --statistics lib/
-        flake8 --count --ignore=C901 --max-complexity=15 --max-line-length=120 --exclude=manifest.py --statistics lib/
+        flake8 --count --ignore=C901,E221,E203 --select=E9,F63,F7,F82 --exclude=manifest.py --show-source --statistics lib/
+        flake8 --count --ignore=C901,E221,E203 --max-complexity=15 --max-line-length=120 --exclude=manifest.py --statistics lib/
