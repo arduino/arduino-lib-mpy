@@ -14,6 +14,8 @@ if __name__ == "__main__":
         level=logging.INFO  # Switch to DEBUG to see raw commands
     )
 
+    # On CPython, something like the following should be used:
+    # opta = opta.Opta(bus_id=3, pin_id=("/dev/gpiochip1", 5))
     opta = opta.Opta(bus_id=3)
 
     # enum_devices initializes the bus, resets all expansions, and returns a list of
